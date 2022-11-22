@@ -6,7 +6,7 @@ import abi
 
 # Option
 factor = 1
-flag_approve = 0
+flag_approve = 1
 number_of_repetitions = 1
 number_of_threads = 1
 
