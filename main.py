@@ -41,8 +41,7 @@ def web_arb_buy(privatekey, amount, tokenToBue, symbol):
         gasPrice = intToDecimal(0.0000000001, 18)
         nonce = web3.eth.get_transaction_count(address_wallet)
         amount_out = contract.functions.getAmountsOut(Web3.toWei(amount, 'ether'), [eth, tokenToBue]).call()
-        price = amount_out[1] / 1000000
-        min_tokens = int(float(price) * (1 - slippage / 100))
+        min_tokens = int(float(amount_out[1]) * (1 - slippage / 100))
         contract_txn = contract.functions.swapExactETHForTokens(
             min_tokens,  # amountOutMin
             [eth, tokenToBue],  # TokenSold, TokenBuy
@@ -104,8 +103,7 @@ def web_arb_sold(privatekey, tokenToSold, symbol):
         token_sold = web3.eth.contract(address=tokenToSold, abi=abi.USDT)
         token_balance = token_sold.functions.balanceOf(address_wallet).call()
         amount_out = contract.functions.getAmountsOut(token_balance, [tokenToSold, eth]).call()
-        price = Web3.fromWei(amount_out[1], 'ether')
-        min_tokens = int(float(price) * (1 - slippage / 100))
+        min_tokens = int(float(amount_out[1]) * (1 - slippage / 100))
         contract_txn = contract.functions.swapExactTokensForETH(
             token_balance,
             min_tokens,
