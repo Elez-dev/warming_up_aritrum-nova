@@ -5,11 +5,12 @@ import threading
 import abi
 
 # Option
-factor = 1
-flag_approve = 1
+factor = 1  # purchase volume
+flag_approve = 0  # if you need approve
 number_of_repetitions = 1
 number_of_threads = 1
-
+slippage = 1  # %
+# -------------------------
 
 swap_ARB = [
     {'symbol': 'USDC',
@@ -39,8 +40,11 @@ def web_arb_buy(privatekey, amount, tokenToBue, symbol):
         contract = web3.eth.contract(address=contract_ARB, abi=ABI)
         gasPrice = intToDecimal(0.0000000001, 18)
         nonce = web3.eth.get_transaction_count(address_wallet)
+        amount_out = contract.functions.getAmountsOut(Web3.toWei(amount, 'ether'), [eth, tokenToBue]).call()
+        price = amount_out[1] / 1000000
+        min_tokens = int(float(price) * (1 - slippage / 100))
         contract_txn = contract.functions.swapExactETHForTokens(
-            0,  # amountOutMin
+            min_tokens,  # amountOutMin
             [eth, tokenToBue],  # TokenSold, TokenBuy
             address_wallet,  # receiver
             (int(time.time()) + 10000)  # deadline
@@ -99,9 +103,12 @@ def web_arb_sold(privatekey, tokenToSold, symbol):
         nonce = web3.eth.get_transaction_count(address_wallet)
         token_sold = web3.eth.contract(address=tokenToSold, abi=abi.USDT)
         token_balance = token_sold.functions.balanceOf(address_wallet).call()
+        amount_out = contract.functions.getAmountsOut(token_balance, [tokenToSold, eth]).call()
+        price = Web3.fromWei(amount_out[1], 'ether')
+        min_tokens = int(float(price) * (1 - slippage / 100))
         contract_txn = contract.functions.swapExactTokensForETH(
             token_balance,
-            0,
+            min_tokens,
             [token, eth],
             address_wallet,
             (int(time.time()) + 100000)
