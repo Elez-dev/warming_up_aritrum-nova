@@ -24,21 +24,16 @@ swap_ARB = [
 
 eth = Web3.toChecksumAddress('0x722e8bdd2ce80a4422e880164f2079488e115365')  # ETH
 contract_ARB = Web3.toChecksumAddress('0xee01c0cd76354c383b8c7b4e65ea88d00b06f36f')  # ARB swap
-gasLimit = 4000000
-
-
-def intToDecimal(qty, decimal):
-    return int(qty * int("".join(["1"] + ["0"] * decimal)))
 
 
 def web_arb_buy(privatekey, amount, tokenToBue, symbol):
-    global eth, contract_ARB, gasLimit
+    global eth, contract_ARB
     account = web3.eth.account.privateKeyToAccount(privatekey)
     address_wallet = account.address
     try:
         ABI = abi.ARB
         contract = web3.eth.contract(address=contract_ARB, abi=ABI)
-        gasPrice = intToDecimal(0.0000000001, 18)
+        gasPrice = web3.eth.gas_price
         nonce = web3.eth.get_transaction_count(address_wallet)
         amount_out = contract.functions.getAmountsOut(Web3.toWei(amount, 'ether'), [eth, tokenToBue]).call()
         min_tokens = int(float(amount_out[1]) * (1 - slippage / 100))
@@ -50,7 +45,6 @@ def web_arb_buy(privatekey, amount, tokenToBue, symbol):
         ).buildTransaction({
             'from': address_wallet,
             'value': web3.toWei(amount, 'ether'),
-            'gas': gasLimit,
             'gasPrice': gasPrice,
             'nonce': nonce,
         })
@@ -64,7 +58,7 @@ def web_arb_buy(privatekey, amount, tokenToBue, symbol):
 
 
 def approve(privatekey, tokenToApprove, symbol):
-    global contract_ARB, gasLimit
+    global contract_ARB
     account = web3.eth.account.privateKeyToAccount(privatekey)
     address_wallet = account.address
     try:
@@ -73,11 +67,9 @@ def approve(privatekey, tokenToApprove, symbol):
         token = web3.eth.contract(address=contractToken, abi=ABI)
         max_amount = web3.toWei(2 ** 64 - 1, 'ether')
         nonce = web3.eth.getTransactionCount(address_wallet)
-        gasPrice = intToDecimal(0.0000000001, 18)
+        gasPrice = web3.eth.gas_price
         tx = token.functions.approve(contract_ARB, max_amount).buildTransaction({
             'from': address_wallet,
-            'value': 0,
-            'gas': gasLimit,
             'gasPrice': gasPrice,
             'nonce': nonce
         })
@@ -98,7 +90,7 @@ def web_arb_sold(privatekey, tokenToSold, symbol):
         token = Web3.toChecksumAddress(tokenToSold)
         ABI = abi.ARB
         contract = web3.eth.contract(address=contract_ARB, abi=ABI)
-        gasPrice = intToDecimal(0.0000000001, 18)
+        gasPrice = web3.eth.gas_price
         nonce = web3.eth.get_transaction_count(address_wallet)
         token_sold = web3.eth.contract(address=tokenToSold, abi=abi.USDT)
         token_balance = token_sold.functions.balanceOf(address_wallet).call()
@@ -112,7 +104,6 @@ def web_arb_sold(privatekey, tokenToSold, symbol):
             (int(time.time()) + 100000)
         ).buildTransaction({
             'from': address_wallet,
-            'gas': gasLimit,
             'gasPrice': gasPrice,
             'nonce': nonce,
         })
